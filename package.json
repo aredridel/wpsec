@@ -1,0 +1,28 @@
+{
+  "name": "wpsec",
+  "version": "1.0.0",
+  "description": "Scan wordpress for suspicious amendments",
+  "main": "index.js",
+  "bin": {
+    "wpsec": "wpsec.js"
+  },
+  "scripts": {
+    "test": "tap test.js"
+  },
+  "author": "Aria Stewart <aredridel@dinhe.net>",
+  "license": "ISC",
+  "devDependencies": {
+    "tap": "^1.4.1"
+  },
+  "dependencies": {
+    "bl": "^1.0.0",
+    "bloom-filter": "^0.2.0",
+    "bluebird": "^2.10.1",
+    "fstream": "^1.0.8",
+    "home-or-tmp": "^2.0.0",
+    "mkdirp": "^0.5.1",
+    "requisition": "^1.5.1",
+    "tar": "^2.2.1",
+    "verror": "^1.6.0"
+  }
+}
