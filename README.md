@@ -19,3 +19,4 @@ Does not know about plugins or themes yet.
 
 Shows uploads as unknown files as well.
 
+For speed this tool uses a bloom filter to verify files against. There is a possibility of false negatives.
