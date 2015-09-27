@@ -147,9 +147,9 @@ function filterDir(filter, ent, fallback) {
 
         if (ent.type == 'Directory') {
             if (!fallback && ent.depth == 3 && ent.parent.props.basename == 'plugins' && ent.parent.parent.props.basename == 'wp-content') {
-                waiting.push(handleAddonDir('plugin', ent).catch(handleErrorAndFallback));
+                waiting.push(handleAddonDir('plugin', ent).catch(warnAboutError));
             } else if (!fallback && ent.depth == 3 && ent.parent.props.basename == 'themes' && ent.parent.parent.props.basename == 'wp-content') {
-                waiting.push(handleAddonDir('theme', ent).catch(handleErrorAndFallback));
+                waiting.push(handleAddonDir('theme', ent).catch(warnAboutError));
             } else if (!fallback && ent.depth == 2 && ent.props.basename == 'uploads' && ent.parent.props.basename == 'wp-content') {
                 debug("uploads dir '%s', not scanning", ent.path);
                 ent.resume();
@@ -186,9 +186,9 @@ function filterDir(filter, ent, fallback) {
         ent.on('error', n);
     });
 
-    function handleErrorAndFallback(err) {
+    function warnAboutError(err) {
         console.warn(err.stack || err);
-        return filterDir(filter, ent, true);
+        return [];
     }
 }
 
