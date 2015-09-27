@@ -14,16 +14,27 @@ var unzip = require('unzip2');
 var bl = require('bl');
 var fstream = require('fstream');
 var debug = require('debuglog')('wpsec');
+var crypto = require('crypto');
 
-var dir = process.argv[2] || '.';
+function sha(d) {
+    return crypto.createHash('sha1').update(d).digest('hex');
+}
 
-processDir(dir).catch(function (err) {
+var command = process.argv[2];
+
+if (command != 'scan') {
+    help();
+    process.exit(1);
+}
+
+var dir = process.argv[3] || '.';
+
+scan(dir).catch(function (err) {
     console.warn(err.stack);
     process.exit(1);
 });
 
-
-function processDir(dir) {
+function scan(dir) {
     return P.join(identifyWordpress(dir).then(loadWordpressBloomFilter), openDir(dir)).spread(filterDir).then(function (list) {
         list.forEach(function (e) {
             console.log(e);
@@ -61,6 +72,11 @@ function getBloomFilter(url) {
         } else {
             throw err;
         }
+    }).then(function (filter) {
+        return {
+            url: url,
+            filter: filter
+        };
     });
 }
 
@@ -74,7 +90,7 @@ function createFilter(url) {
             if (ent.type == 'File') {
                 debug("%s '%s'", ent.type, ent.path);
                 ent.pipe(bl(function (err, data) {
-                    debug('Hashing %s bytes', data.length);
+                    debug("Hashing %s bytes, sha1 '%s'", data.length, sha(data));
                     filter.insert(data);
                 }));
             } else {
@@ -144,27 +160,28 @@ function filterDir(filter, ent, fallback) {
                     waiting.push(filterDir(filter, ent));
                 });
             }
+
+            ent.on('end', function () {
+                Promise.all(waiting).then(function (subs) {
+                    subs.forEach(function (e) {
+                        list = list.concat(e);
+                    });
+                    debug("ending '%s' with list of %s entries", ent.path, list.length);
+                    y(list);
+                }).catch(n);
+            });
+
         } else if (ent.type == 'File') {
             ent.resume();
             ent.pipe(bl(function (err, data) {
-                if (!filter.contains(data)) {
-                    debug("Suspect file '%s' detected", ent.path);
-                    list.push(ent.path);
+                if (!filter.filter.contains(data)) {
+                    debug("Suspect file '%s' detected using '%s' sha '%s'", ent.path, filter.url, sha(data));
+                    y([ent.path]);
                 }
             }));
         } else {
             ent.disown();
         }
-
-        ent.on('end', function () {
-            Promise.all(waiting).then(function (subs) {
-                subs.forEach(function (e) {
-                    list = list.concat(e);
-                });
-                debug("ending '%s' with list of %s entries", ent.path, list.length);
-                y(list);
-            }).catch(n);
-        });
 
         ent.on('error', n);
     });
@@ -190,4 +207,8 @@ function handleAddonDir(kind, ent) {
     }).then(function (filter) {
         return filterDir(filter, ent, true);
     });
+}
+
+function help() {
+    console.warn("Use:", process.argv[0], process.argv[1], "scan", "[dir]");
 }
