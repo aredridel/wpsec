@@ -10,7 +10,7 @@ var mkdirp = P.promisify(require('mkdirp'));
 var requisition = require('requisition');
 var zlib = require('zlib');
 var tar = require('tar');
-var unzip = require('unzip2');
+var unzip = require('@aredridel/unzip');
 var bl = require('bl');
 var fstream = require('fstream');
 var debug = require('debuglog')('wpsec');
@@ -139,57 +139,73 @@ function openDir(dir) {
     return reader;
 }
 
-function filterDir(filter, ent, fallback) {
+function filterDir(filter, ent) {
     ent.pause();
-    return new P(function (y, n) {
-        var list = [];
-        var waiting = [];
-
-        if (ent.type == 'Directory') {
-            if (!fallback && ent.depth == 3 && ent.parent.props.basename == 'plugins' && ent.parent.parent.props.basename == 'wp-content') {
-                waiting.push(handleAddonDir('plugin', ent).catch(warnAboutError));
-            } else if (!fallback && ent.depth == 3 && ent.parent.props.basename == 'themes' && ent.parent.parent.props.basename == 'wp-content') {
-                waiting.push(handleAddonDir('theme', ent).catch(warnAboutError));
-            } else if (!fallback && ent.depth == 2 && ent.props.basename == 'uploads' && ent.parent.props.basename == 'wp-content') {
-                debug("uploads dir '%s', not scanning", ent.path);
-                ent.resume();
-            } else {
-                debug("regular dir '%s'", ent.path);
-                ent.resume();
-                ent.on('entry', function (ent) {
-                    waiting.push(filterDir(filter, ent));
-                });
-            }
-
-            ent.on('end', function () {
-                Promise.all(waiting).then(function (subs) {
-                    subs.forEach(function (e) {
-                        list = list.concat(e);
-                    });
-                    debug("ending '%s' with list of %s entries", ent.path, list.length);
-                    y(list);
-                }).catch(n);
-            });
-
-        } else if (ent.type == 'File') {
+    if (ent.type == 'Directory') {
+        if (ent.depth == 3 && ent.parent.props.basename == 'plugins' && ent.parent.parent.props.basename == 'wp-content') {
+            return handleAddonDir('plugin', ent).catch(warnAboutError);
+        } else if (ent.depth == 3 && ent.parent.props.basename == 'themes' && ent.parent.parent.props.basename == 'wp-content') {
+            return handleAddonDir('theme', ent).catch(warnAboutError);
+        } else if (ent.depth == 2 && ent.props.basename == 'uploads' && ent.parent.props.basename == 'wp-content') {
             ent.resume();
+            debug("uploads dir '%s', not scanning", ent.path);
+            return [];
+        } else {
+            return handleRegularDir(filter, ent);
+        }
+
+    } else if (ent.type == 'File') {
+        return new P(function (y, n) {
             ent.pipe(bl(function (err, data) {
+                if (err) {
+                    return n(err);
+                }
+
                 if (!filter.filter.contains(data)) {
                     debug("Suspect file '%s' detected using '%s' sha '%s'", ent.path, filter.url, sha(data));
                     y([ent.path]);
+                } else {
+                    y([]);
                 }
             }));
-        } else {
-            ent.disown();
-        }
+            ent.resume();
+        });
+    } else {
+        ent.disown();
+        return [];
+    }
 
-        ent.on('error', n);
-    });
 
     function warnAboutError(err) {
         console.warn(err.stack || err);
         return [];
     }
+}
+
+function handleRegularDir(filter, ent) {
+    return new P(function (y, n) {
+        var waiting = [];
+
+        debug("regular dir '%s'", ent.path);
+        ent.on('entry', function (child) {
+            waiting.push(filterDir(filter, child));
+        });
+
+        ent.on('end', function doTheThing() {
+            var list = [];
+            Promise.all(waiting).then(function (subs) {
+                subs.forEach(function (e) {
+                    list = list.concat(e);
+                });
+                debug("ending '%s' with list of %s entries", ent.path, list.length);
+                y(list);
+            }).catch(n);
+        });
+
+        ent.on('error', n);
+
+        ent.resume();
+    });
 }
 
 function handleAddonDir(kind, ent) {
@@ -205,7 +221,7 @@ function handleAddonDir(kind, ent) {
     }).then(function (version) {
         return loadAddonBloomFilter(kind, ent.props.basename, version);
     }).then(function (filter) {
-        return filterDir(filter, ent, true);
+        return handleRegularDir(filter, ent);
     });
 }
 

@@ -15,6 +15,7 @@
     "tap": "^1.4.1"
   },
   "dependencies": {
+    "@aredridel/unzip": "^1.0.0",
     "bl": "^1.0.0",
     "bloom-filter": "^0.2.0",
     "bluebird": "^2.10.1",
@@ -24,7 +25,6 @@
     "mkdirp": "^0.5.1",
     "requisition": "^1.5.1",
     "tar": "^2.2.1",
-    "unzip2": "^0.2.5",
     "verror": "^1.6.0"
   }
 }
