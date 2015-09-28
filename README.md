@@ -10,13 +10,9 @@ Use
 wpsec /path/to/wordpress
 ```
 
-Will print a list of files that differ from the Wordpress distribution that is currently installed in that directory.
+Will print a list of files that differ from the Wordpress distribution that is currently installed in that directory, or differ from the distribution of plugin or theme..
 
 Caveats
 -------
-
-Does not know about plugins or themes yet.
-
-Shows uploads as unknown files as well.
 
 For speed this tool uses a bloom filter to verify files against. There is a possibility of false negatives.
