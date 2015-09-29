@@ -15,6 +15,7 @@ var bl = require('bl');
 var fstream = require('fstream');
 var debug = require('debuglog')('wpsec');
 var crypto = require('crypto');
+var glob = P.promisify(require('glob'));
 
 function sha(d) {
     return crypto.createHash('sha1').update(d).digest('hex');
@@ -210,18 +211,25 @@ function handleRegularDir(filter, ent) {
 
 function handleAddonDir(kind, ent) {
     debug(kind, 'dir', ent.path);
-    var metadataFile = kind == 'plugin' ? ent.props.basename + '.php' : 'style.css';
-    return fs.readFileAsync(path.resolve(ent.path, metadataFile), 'utf-8').then(function (metadata) {
+    var metadataFiles = kind == 'plugin' ? glob(path.join(ent.path, '*.php')) : Promise.resolve([path.resolve(ent.path, 'style.css')]);
+
+    return P.any(metadataFiles.then(function (files) {
+        return files.map(readMetadataFrom);
+    })).then(function (version) {
+        return loadAddonBloomFilter(kind, ent.props.basename, version);
+    }).then(function (filter) {
+        return handleRegularDir(filter, ent);
+    });
+}
+
+function readMetadataFrom(file) {
+    return fs.readFileAsync(file, 'utf-8').then(function (metadata) {
         var m = /Version: (.*)$/m.exec(metadata);
         if (m) {
             return m[1];
         } else {
-            throw new VError("No metadata found in '%s'", ent.path);
+            throw new VError("No metadata found in '%s'", file);
         }
-    }).then(function (version) {
-        return loadAddonBloomFilter(kind, ent.props.basename, version);
-    }).then(function (filter) {
-        return handleRegularDir(filter, ent);
     });
 }
 
