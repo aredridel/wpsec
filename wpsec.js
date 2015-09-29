@@ -94,8 +94,6 @@ function createFilter(url) {
                     debug("Hashing %s bytes, sha1 '%s'", data.length, sha(data));
                     filter.insert(data);
                 }));
-            } else {
-                ent.autodrain();
             }
         });
 
