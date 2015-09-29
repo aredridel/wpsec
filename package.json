@@ -1,6 +1,6 @@
 {
   "name": "wpsec",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Scan wordpress for suspicious amendments",
   "main": "index.js",
   "bin": {
