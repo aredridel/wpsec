@@ -12,16 +12,16 @@
   "author": "Aria Stewart <aredridel@dinhe.net>",
   "license": "ISC",
   "devDependencies": {
-    "tap": "^1.4.1"
+    "tap": "^6.2.0"
   },
   "dependencies": {
     "@aredridel/unzip": "^1.0.0",
     "bl": "^1.0.0",
     "bloom-filter": "^0.2.0",
-    "bluebird": "^2.10.1",
+    "bluebird": "^3.4.1",
     "debuglog": "^1.0.1",
     "fstream": "^1.0.8",
-    "glob": "^5.0.15",
+    "glob": "^7.0.5",
     "home-or-tmp": "^2.0.0",
     "mkdirp": "^0.5.1",
     "requisition": "^1.5.1",
