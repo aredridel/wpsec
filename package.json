@@ -26,7 +26,7 @@
     "mkdirp": "^0.5.1",
     "requisition": "^1.5.1",
     "tar": "^2.2.1",
-    "verror": "^1.6.0"
+    "verror": "^1.8.1"
   },
   "repository": {
     "type": "git",
