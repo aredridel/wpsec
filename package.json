@@ -21,7 +21,7 @@
     "bluebird": "^3.4.6",
     "debuglog": "^1.0.1",
     "fstream": "^1.0.8",
-    "glob": "^5.0.15",
+    "glob": "^7.0.6",
     "home-or-tmp": "^2.0.0",
     "mkdirp": "^0.5.1",
     "requisition": "^1.5.1",
