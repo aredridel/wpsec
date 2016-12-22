@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@aredridel/unzip": "^1.0.0",
-    "bl": "^1.0.0",
+    "bl": "^1.2.0",
     "bloom-filter": "^0.2.0",
     "bluebird": "^3.4.6",
     "debuglog": "^1.0.1",
