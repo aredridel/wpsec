@@ -7,7 +7,7 @@ var path = require('path');
 var homedir = require('home-or-tmp');
 var BloomFilter = require('bloom-filter');
 var mkdirp = P.promisify(require('mkdirp'));
-var requisition = require('requisition');
+var fetch = require('make-fetch-happen');
 var zlib = require('zlib');
 var tar = require('tar');
 var unzip = require('@aredridel/unzip');
@@ -85,8 +85,8 @@ function createFilter(url) {
     var filter = BloomFilter.create(16384, 0.01);
     var config = path.resolve(homedir, '.config', 'wpsec');
     debug('fetch', url);
-    return requisition(url).then(function (res) {
-        var s = /\.zip$/.test(url) ? res.pipe(unzip.Parse()) : res.pipe(zlib.createGunzip()).pipe(tar.Parse());
+    return fetch(url).then(function (res) {
+        var s = /\.zip$/.test(url) ? res.body.pipe(unzip.Parse()) : res.body.pipe(zlib.createGunzip()).pipe(tar.Parse());
         s.on('entry', function (ent) {
             if (ent.type == 'File') {
                 debug("%s '%s'", ent.type, ent.path);
