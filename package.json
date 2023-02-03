@@ -12,7 +12,7 @@
   "author": "Aria Stewart <aredridel@dinhe.net>",
   "license": "ISC",
   "devDependencies": {
-    "tap": "^10.3.2"
+    "tap": "^16.3.4"
   },
   "dependencies": {
     "@aredridel/unzip": "^1.0.0",
